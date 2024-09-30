@@ -1,0 +1,43 @@
+name: Run Scheduler
+
+on:
+  schedule:
+    # Runs every Sunday at 00:00 (UTC)
+    - cron: '0 0 * * 0'
+
+jobs:
+  GetAndLoadDailyDevOps:
+    runs-on: ubuntu-latest
+
+    env:
+      ASSISTANT_ID: ${{ secrets.ASSISTANT_ID }}
+      OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+      THREAD_ID: ${{ secrets.THREAD_ID }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+
+    - name: Create directory for Google Application Credentials
+      run: mkdir -p $HOME/.gcloud
+
+    - name: Write to file
+      run: echo "${{ secrets.GCP_ESCAPED_FIRESTORE_SA_KEY }}" > $HOME/.gcloud/credentials.json
+      
+    - name: Set environment variable for Google Cloud credentials
+      run: echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/.gcloud/credentials.json" >> $GITHUB_ENV
+
+    - name: Install dependencies
+      working-directory: backend/scheduler
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run the Script to generate daily devops
+      working-directory: backend/scheduler
+      run: python scheduler.py
