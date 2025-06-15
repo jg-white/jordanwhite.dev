@@ -47,7 +47,17 @@ export default function RootLayout({
             <main className="container mx-auto max-w-7xl pt-16 px-6 flex-grow">
               {children}
             </main>
-            <footer className="w-full flex items-center justify-center py-3"></footer>
+            <footer className="w-full py-3 text-center font-light text-sm">
+              <span>
+                Powered by{" "}
+                <a
+                  href="https://openai.com/"
+                  className="text-primary hover:underline"
+                >
+                  OpenAI
+                </a>
+              </span>
+            </footer>
           </div>
         </Providers>
       </body>

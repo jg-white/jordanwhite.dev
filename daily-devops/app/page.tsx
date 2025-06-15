@@ -1,14 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  orderBy,
-  limit,
-} from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { Card, CardHeader, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
@@ -24,94 +17,41 @@ import {
 } from "@heroui/modal";
 
 export default function Home() {
-  const [questionData, setQuestionData] = useState({
-    date: "",
-    question: "",
-    choices: [],
-    correctAnswer: "",
-    moreReading: "",
-  });
-  const [canNavigateLeft, setCanNavigateLeft] = useState(false);
-  const [canNavigateRight, setCanNavigateRight] = useState(false);
+  const [questions, setQuestions] = useState<any[]>([]); // Store all questions
+  const [currentIndex, setCurrentIndex] = useState(0); // Track the current question index
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  const checkNavigationAvailability = async (date: string) => {
-    const leftQuery = query(
-      collection(db, "daily-devops-quiz"),
-      where("date", "<", date),
-      orderBy("date", "desc"),
-      limit(1)
-    );
-    const leftSnapshot = await getDocs(leftQuery);
-    setCanNavigateLeft(!leftSnapshot.empty);
-
-    const rightQuery = query(
-      collection(db, "daily-devops-quiz"),
-      where("date", ">", date),
-      orderBy("date", "asc"),
-      limit(1)
-    );
-    const rightSnapshot = await getDocs(rightQuery);
-    setCanNavigateRight(!rightSnapshot.empty);
-  };
-
   useEffect(() => {
-    const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
-
-    const fetchQuestion = async (date: string) => {
-      const q = query(
-        collection(db, "daily-devops-quiz"),
-        where("date", "==", date)
-      );
-      const querySnapshot = await getDocs(q);
-      querySnapshot.forEach((doc) => {
-        setQuestionData({
-          date: doc.data().date || "",
-          question: doc.data().question || "",
-          choices: (doc.data().choices || []).sort(() => Math.random() - 0.5),
-          correctAnswer: doc.data().correctAnswer || "",
-          moreReading: doc.data().moreReading || "",
-        });
-      });
+    const fetchAllQuestions = async () => {
+      const querySnapshot = await getDocs(collection(db, "daily-devops-quiz"));
+      const allQuestions = querySnapshot.docs
+        .map((doc) => doc.data())
+        .filter((question) => new Date(question.date) <= new Date()) // Filter questions up to today's date
+        .sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        ); // Sort by date
+      setQuestions(allQuestions);
+      setCurrentIndex(allQuestions.length - 1); // Set the current index to the last question
     };
 
-    fetchQuestion(today);
-    checkNavigationAvailability(today);
+    fetchAllQuestions();
   }, []);
 
-  const navigateDate = async (direction: "left" | "right") => {
-    const currentDate = questionData.date;
-    const queryDirection = direction === "left" ? "<" : ">";
-    const orderDirection = direction === "left" ? "desc" : "asc";
-
-    const q = query(
-      collection(db, "daily-devops-quiz"),
-      where("date", queryDirection, currentDate),
-      orderBy("date", orderDirection),
-      limit(1)
-    );
-    const querySnapshot = await getDocs(q);
-    querySnapshot.forEach((doc) => {
-      const newDate = doc.data().date || "";
-      setQuestionData({
-        date: newDate,
-        question: doc.data().question || "",
-        choices: (doc.data().choices || []).sort(() => Math.random() - 0.5),
-        correctAnswer: doc.data().correctAnswer || "",
-        moreReading: doc.data().moreReading || "",
-      });
-
-      // Pass the new date directly to checkNavigationAvailability
-      checkNavigationAvailability(newDate);
-    });
-
+  const navigateDate = (direction: "left" | "right") => {
+    if (direction === "left" && currentIndex > 0) {
+      setCurrentIndex((prevIndex) => prevIndex - 1);
+    } else if (direction === "right" && currentIndex < questions.length - 1) {
+      setCurrentIndex((prevIndex) => prevIndex + 1);
+    }
     setSelectedAnswer(""); // Reset selected answer when navigating
   };
 
   const handleAnswerClick = (answer: string) => {
     setSelectedAnswer(answer);
   };
+
+  const currentQuestion = questions[currentIndex] || {};
 
   return (
     <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
@@ -124,19 +64,19 @@ export default function Home() {
         <CardHeader className="flex gap-4 items-center justify-center">
           <Button
             isIconOnly
-            isDisabled={!canNavigateLeft}
+            isDisabled={currentIndex === 0} // Disable if at the first question
             onPress={() => navigateDate("left")}
           >
             <ArrowLeftIcon />
           </Button>
           <h4>
-            {questionData.date === new Date().toISOString().split("T")[0]
+            {currentQuestion.date === new Date().toISOString().split("T")[0]
               ? "Today"
-              : questionData.date}
+              : currentQuestion.date}
           </h4>
           <Button
             isIconOnly
-            isDisabled={!canNavigateRight}
+            isDisabled={currentIndex === questions.length - 1} // Disable if at the last question
             onPress={() => navigateDate("right")}
           >
             <ArrowRightIcon />
@@ -144,15 +84,15 @@ export default function Home() {
         </CardHeader>
         <Divider />
         <CardBody className="overflow-visible">
-          <p className="py-2 text-center">{questionData.question}</p>
+          <p className="py-2 text-center">{currentQuestion.question}</p>
           <Divider />
           <div className="flex py-4 flex-col gap-4 items-left">
-            {questionData.choices.map((answer, index) => (
+            {currentQuestion.choices?.map((answer: string, index: number) => (
               <Button
                 key={index}
                 color={
                   selectedAnswer === answer
-                    ? answer === questionData.correctAnswer
+                    ? answer === currentQuestion.correctAnswer
                       ? "success"
                       : "danger"
                     : "default"
@@ -171,7 +111,7 @@ export default function Home() {
         onPress={onOpen}
         style={{
           display:
-            selectedAnswer === questionData.correctAnswer &&
+            selectedAnswer === currentQuestion.correctAnswer &&
             selectedAnswer !== ""
               ? "block"
               : "none",
@@ -184,10 +124,10 @@ export default function Home() {
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
-                {questionData.correctAnswer}
+                {currentQuestion.correctAnswer}
               </ModalHeader>
               <ModalBody>
-                <p>{questionData.moreReading}</p>
+                <p>{currentQuestion.moreReading}</p>
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
