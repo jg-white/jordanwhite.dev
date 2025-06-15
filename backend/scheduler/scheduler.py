@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta
-import json
+import json 
 import os
 import time
 import openai
 from google.cloud import firestore
-
 
 # Set OpenAI API key from environment variables
 openai.api_key = os.getenv('OPENAI_KEY')
@@ -17,7 +16,7 @@ def get_date_from_days(days_from_now):
    days_from_now (int): Number of days from the current date
 
    Returns:
-   str: Future date formatted as 'DD-MM-YYYY'
+   str: Future date formatted as 'YYYY-MM-DD'
    """
    # Get the current date
    current_date = datetime.now()
@@ -26,7 +25,7 @@ def get_date_from_days(days_from_now):
    future_date = current_date + timedelta(days=days_from_now)
 
    # Format the date as a string and return it
-   return future_date.strftime('%d-%m-%Y')
+   return future_date.strftime('%Y-%m-%d')
 
 def wait_for_run_completion(thread_id, run_id, timeout=300, poll_interval=5):
    """
@@ -87,25 +86,23 @@ def send_message(assistant_id, thread_id, query, timeout=300):
 
 def main():
    """
-   Main function to generate daily DevOps tips.
-
-   Fetches DevOps tips for the upcoming week.
+   Fetches DevOps Quiz Questions for the upcoming week.
    """
    assistant_id = os.getenv('ASSISTANT_ID')
 
-   # Using one thread keeps previous tokens to evaulative e.g. not same devops tips showing up.
+   # Using one thread keeps previous tokens to evaulative e.g. not same the questions showing up.
    thread_id = os.getenv('THREAD_ID')
 
    daily_devops = []
 
    for i in range(1, 8):
-      input_query = f"Using the daily_devops schema, give me a daily_devops JSON for date: {get_date_from_days(i)}. Use UK English. Do not give tips that were already given in this thread."
+      input_query = f"Using the DailyDevOpsQuiz schema, give me a DailyDevOpsQuiz JSON for date: {get_date_from_days(i)}. Make Choices relatively short. Use UK English. Do not give question that have already been asked in this thread."
       response = send_message(assistant_id, thread_id, input_query)
       daily_devops.append(response)
    
    db = firestore.Client()
    for item in daily_devops:
-      doc_ref = db.collection(u'daily_devops').document(item['date'])
+      doc_ref = db.collection(u'daily-devops-quiz').document()
       doc_ref.set(item)
 
 if __name__ == "__main__":

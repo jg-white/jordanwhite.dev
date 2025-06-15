@@ -14,21 +14,31 @@ import { Card, CardHeader, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Divider } from "@heroui/divider";
 import { ArrowLeftIcon, ArrowRightIcon } from "@/components/icons";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+} from "@heroui/modal";
 
 export default function Home() {
   const [questionData, setQuestionData] = useState({
     date: "",
     question: "",
-    answers: [],
+    choices: [],
     correctAnswer: "",
+    moreReading: "",
   });
   const [canNavigateLeft, setCanNavigateLeft] = useState(false);
   const [canNavigateRight, setCanNavigateRight] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState("");
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const checkNavigationAvailability = async (date: string) => {
     const leftQuery = query(
-      collection(db, "daily-devops"),
+      collection(db, "daily-devops-quiz"),
       where("date", "<", date),
       orderBy("date", "desc"),
       limit(1)
@@ -37,7 +47,7 @@ export default function Home() {
     setCanNavigateLeft(!leftSnapshot.empty);
 
     const rightQuery = query(
-      collection(db, "daily-devops"),
+      collection(db, "daily-devops-quiz"),
       where("date", ">", date),
       orderBy("date", "asc"),
       limit(1)
@@ -51,7 +61,7 @@ export default function Home() {
 
     const fetchQuestion = async (date: string) => {
       const q = query(
-        collection(db, "daily-devops"),
+        collection(db, "daily-devops-quiz"),
         where("date", "==", date)
       );
       const querySnapshot = await getDocs(q);
@@ -59,8 +69,9 @@ export default function Home() {
         setQuestionData({
           date: doc.data().date || "",
           question: doc.data().question || "",
-          answers: doc.data().answers || [],
+          choices: (doc.data().choices || []).sort(() => Math.random() - 0.5),
           correctAnswer: doc.data().correctAnswer || "",
+          moreReading: doc.data().moreReading || "",
         });
       });
     };
@@ -75,7 +86,7 @@ export default function Home() {
     const orderDirection = direction === "left" ? "desc" : "asc";
 
     const q = query(
-      collection(db, "daily-devops"),
+      collection(db, "daily-devops-quiz"),
       where("date", queryDirection, currentDate),
       orderBy("date", orderDirection),
       limit(1)
@@ -86,8 +97,9 @@ export default function Home() {
       setQuestionData({
         date: newDate,
         question: doc.data().question || "",
-        answers: doc.data().answers || [],
+        choices: (doc.data().choices || []).sort(() => Math.random() - 0.5),
         correctAnswer: doc.data().correctAnswer || "",
+        moreReading: doc.data().moreReading || "",
       });
 
       // Pass the new date directly to checkNavigationAvailability
@@ -105,7 +117,7 @@ export default function Home() {
     <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
       <div className="inline-block max-w-xl text-center justify-center">
         <span className="text-3xl font-bold">Daily&nbsp;</span>
-        <span className="text-3xl font-bold text-violet-500">DevOps&nbsp;</span>
+        <span className="text-3xl font-bold text-violet-500">DevOps</span>
         <br />
       </div>
       <Card className="w-full max-w-[90%] md:max-w-[340px]">
@@ -117,7 +129,11 @@ export default function Home() {
           >
             <ArrowLeftIcon />
           </Button>
-          <h4>{questionData.date}</h4>
+          <h4>
+            {questionData.date === new Date().toISOString().split("T")[0]
+              ? "Today"
+              : questionData.date}
+          </h4>
           <Button
             isIconOnly
             isDisabled={!canNavigateRight}
@@ -131,7 +147,7 @@ export default function Home() {
           <p className="py-2 text-center">{questionData.question}</p>
           <Divider />
           <div className="flex py-4 flex-col gap-4 items-left">
-            {questionData.answers.map((answer, index) => (
+            {questionData.choices.map((answer, index) => (
               <Button
                 key={index}
                 color={
@@ -149,6 +165,39 @@ export default function Home() {
           </div>
         </CardBody>
       </Card>
+
+      <Button
+        color="primary"
+        onPress={onOpen}
+        style={{
+          display:
+            selectedAnswer === questionData.correctAnswer &&
+            selectedAnswer !== ""
+              ? "block"
+              : "none",
+        }}
+      >
+        Explanation
+      </Button>
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                {questionData.correctAnswer}
+              </ModalHeader>
+              <ModalBody>
+                <p>{questionData.moreReading}</p>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Close
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </section>
   );
 }
