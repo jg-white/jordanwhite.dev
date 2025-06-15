@@ -4,6 +4,9 @@ import os
 import time
 import openai
 from google.cloud import firestore
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Set OpenAI API key from environment variables
 openai.api_key = os.getenv('OPENAI_KEY')
@@ -100,10 +103,21 @@ def main():
       response = send_message(assistant_id, thread_id, input_query)
       daily_devops.append(response)
    
-   db = firestore.Client()
+   try:
+      db = firestore.Client()
+      logging.info("Firestore client initialized successfully")
+   except Exception as e:
+      logging.error(f"Error initializing Firestore client: {e}")
+      return
+
    for item in daily_devops:
-      doc_ref = db.collection(u'daily-devops-quiz').document()
-      doc_ref.set(item)
+      try:
+         doc_ref = db.collection(u'daily-devops-quiz').document()
+         doc_ref.set(item)
+         logging.info(f"Saved item to Firestore: {item}")
+      except Exception as e:
+         logging.error(f"Error saving item to Firestore: {e}")
+
 
 if __name__ == "__main__":
    main()
