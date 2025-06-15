@@ -25,6 +25,12 @@ jobs:
         run: |
           gcloud auth configure-docker ${{ vars.GCP_REGION }}-docker.pkg.dev
 
+      - name: Write FIREBASE_CONFIG to file
+        run: echo "${{ secrets.FIREBASE_CONFIG }}" > $HOME/firebase_config.json
+
+      - name: Set environment variable for FIREBASE_CONFIG
+        run: echo "FIREBASE_CONFIG=$HOME/firebase_config.json" >> $GITHUB_ENV
+
       - name: Build Docker image
         working-directory: daily-devops
         run: |
