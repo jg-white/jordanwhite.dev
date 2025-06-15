@@ -38,6 +38,25 @@ export default function Home() {
     fetchAllQuestions();
   }, []);
 
+  const formatDateToPlainEnglish = (dateString: string): string => {
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleString("default", { month: "long" });
+    const year = date.getFullYear();
+
+    // Add suffix for the day (e.g. 1st, 2nd, 3rd)
+    const daySuffix =
+      day % 10 === 1 && day !== 11
+        ? "st"
+        : day % 10 === 2 && day !== 12
+          ? "nd"
+          : day % 10 === 3 && day !== 13
+            ? "rd"
+            : "th";
+
+    return `${day}${daySuffix} ${month}, ${year}`;
+  };
+
   const navigateDate = (direction: "left" | "right") => {
     if (direction === "left" && currentIndex > 0) {
       setCurrentIndex((prevIndex) => prevIndex - 1);
@@ -72,7 +91,7 @@ export default function Home() {
           <h4>
             {currentQuestion.date === new Date().toISOString().split("T")[0]
               ? "Today"
-              : currentQuestion.date}
+              : formatDateToPlainEnglish(currentQuestion.date)}
           </h4>
           <Button
             isIconOnly
