@@ -1,12 +1,9 @@
 name: Run Scheduler
 
-# on:
-#   schedule:
-#     # Runs every Sunday at 00:00 (UTC)
-#     - cron: '0 0 * * 0'
-
 on:
-  workflow_dispatch:
+  schedule:
+    # Runs every Sunday at 00:00 (UTC)
+    - cron: "0 0 * * 0"
 
 jobs:
   GetAndLoadDailyDevOps:
