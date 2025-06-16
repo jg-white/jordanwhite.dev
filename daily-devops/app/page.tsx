@@ -118,7 +118,7 @@ export default function Home() {
                 }
                 onPress={() => handleAnswerClick(answer)}
               >
-                {answer}
+                <span className="text-wrap">{answer}</span>
               </Button>
             ))}
           </div>
