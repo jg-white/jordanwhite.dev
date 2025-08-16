@@ -4,6 +4,9 @@ import os
 import time
 import openai
 from google.cloud import firestore
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Set OpenAI API key from environment variables
 openai.api_key = os.getenv('OPENAI_KEY')
