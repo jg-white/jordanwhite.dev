@@ -27,11 +27,11 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Terraform Init
-        working-directory: GCP-terraform
+        working-directory: GCP_terraform
         run: terraform init
 
       - name: Terraform Apply
-        working-directory: terraform
+        working-directory: GCP_terraform
         run: terraform apply -auto-approve -var "project_id=${{ secrets.GCP_PROJECT_ID }}" -var "region=${{ vars.GCP_REGION }}"
 
       - name: Verify App

@@ -1,0 +1,43 @@
+name: Deploy daily-devops to AWS EC2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build Docker Image
+        working-directory: daily-devops
+        run: |
+          docker build --build-arg NEXT_PUBLIC_FIREBASE_CONFIG="${{ secrets.FIREBASE_CONFIG }}" \
+            -t 871826697456.dkr.ecr.eu-west-1.amazonaws.com/daily-devops:latest .
+
+      - name: Push Docker Image to ECR
+        run: |
+          docker push 871826697456.dkr.ecr.eu-west-1.amazonaws.com/daily-devops:latest
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker pull 871826697456.dkr.ecr.eu-west-1.amazonaws.com/daily-devops:latest
+            docker stop daily-devops || true
+            docker rm daily-devops || true
+            docker run -d -p 80:3000 --name daily-devops 871826697456.dkr.ecr.eu-west-1.amazonaws.com/daily-devops:latest
