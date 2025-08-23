@@ -1,4 +1,4 @@
-name: Deploy GCP Terraform Infrastructure
+name: Deploy GCP Terraform
 
 on:
   workflow_dispatch:
