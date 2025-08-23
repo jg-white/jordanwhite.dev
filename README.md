@@ -1,4 +1,4 @@
-# Daily DevOps Quiz
+# Daily DevOps
 
 Daily DevOps Quiz is a web application hosted on JordanWhite.dev that provides daily DevOps learning through interactive quizzes. The project features a modern Next.js frontend, Firestore database, and infrastructure managed across multiple cloud providers (AWS/GCP) with automated deployments using GitHub Actions.
 
@@ -41,7 +41,7 @@ Daily DevOps Quiz is a web application hosted on JordanWhite.dev that provides d
 - TailwindCSS for styling
 - HeroUI component library
 - Firebase SDK for database interactions
-- Containerized with Docker
+- Containerised with Docker
 
 ### Infrastructure
 
@@ -74,7 +74,7 @@ Daily DevOps Quiz is a web application hosted on JordanWhite.dev that provides d
   - GCP (Cloud Run)
   - Cloudflare (DNS)
 - **IaC**: Terraform
-- **Containerization**: Docker
+- **Containerisation**: Docker
 - **Automation**: GitHub Actions
 
 ## Deployment Architecture
