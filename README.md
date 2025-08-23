@@ -1,52 +1,92 @@
-# Daily DevOps
+# Daily DevOps Quiz
 
-**Daily DevOps** is a webpage hosted on [JordanWhite.dev](https://jordanwhite.dev) that showcases daily DevOps tips and facts. The project features a frontend, backend API, scheduler, and infrastructure managed using Google Cloud Platform (GCP) and automated with GitHub Actions. 
+Daily DevOps Quiz is a web application hosted on JordanWhite.dev that provides daily DevOps learning through interactive quizzes. The project features a modern Next.js frontend, Firestore database, and infrastructure managed across multiple cloud providers (AWS/GCP) with automated deployments using GitHub Actions.
 
 ## Features
 
-- **Frontend**: Written in JavaScript and Bootstrap, displaying daily DevOps content fetched from Firestore.
-- **Backend API**: Built with Python Flask, which interacts with a Firestore database to fetch DevOps tips.
-- **Python Scheduler**: Runs on a weekly cron job to pull fresh content from OpenAI and store it in the Firestore database.
-- **Infrastructure as Code (IaC)**: Terraform manages domain, DNS, SSL, and Cloud Run services for the frontend and backend.
-- **Automation Pipelines**: GitHub Actions automate the build, test, and deployment processes, including Terraform deployment and Docker image handling.
+### Frontend
+
+- Built with Next.js, React, and TailwindCSS
+- Interactive quiz interface with daily DevOps questions
+- Historical view of past questions
+- Detailed explanations for correct answers
+- Responsive design using HeroUI components
+
+### Database
+
+- Firebase/Firestore for data storage
+- Direct database integration with Next.js frontend
+- Secured access through Firebase configuration
+
+### Content Generation
+
+- Python scheduler runs weekly via GitHub Actions
+- Leverages OpenAI API to generate DevOps quiz content
+- Automatically stores new questions in Firestore
+
+### Infrastructure
+
+- Multi-cloud deployment capability:
+  - Primary hosting on AWS EC2
+  - Failover capability to Google Cloud Run
+- DNS management through Cloudflare
+- Infrastructure as Code using Terraform
+- Automated deployments via GitHub Actions
 
 ## Architecture
 
-1. **Frontend**:
-   - Built using HTML, JavaScript, and Bootstrap.
-   - Displays daily DevOps tips pulled from Firestore via the backend API.
-   - Deployed to Google Cloud Run and served via HTTPS using GCP Load Balancer.
+### Frontend Application
 
-2. **Backend**:
-   - Flask API written in Python.
-   - Pulls content from Firestore, structured as daily DevOps tips.
-   - Deployed to Google Cloud Run and Dockerized, with images pushed to Artifactory.
+- Next.js React application
+- TailwindCSS for styling
+- HeroUI component library
+- Firebase SDK for database interactions
+- Containerized with Docker
 
-3. **Scheduler**:
-   - Python scheduler runs on a cron job (once per week).
-   - Uses OpenAI's API to generate new DevOps content.
-   - Stores the new content in Firestore for the frontend to display.
+### Infrastructure
 
-4. **Infrastructure**:
-   - Managed using Terraform.
-   - Terraform handles the following:
-     - Domain and DNS management via Google Cloud.
-     - SSL certificates for HTTPS.
-     - Deployment of frontend and backend services to Google Cloud Run.
-     - The Terraform state file is stored in a GCP bucket.
+- Primary Deployment:
+  - AWS EC2 for application hosting
+  - Amazon ECR for container registry
+- Failover Setup:
+  - Google Cloud Run
+  - Google Container Registry
+- DNS & Security:
+  - Cloudflare for DNS management and routing
+  - SSL/TLS certification
 
-5. **CI/CD Pipelines**:
-   - GitHub Actions for automation.
-   - Automates the build and deployment of Docker images for both frontend and backend.
-   - Infrastructure is provisioned using Terraform before application deployment.
-   - Secrets such as GCP Service Account JSON, OpenAI keys, thread ID, and agent ID are securely stored in GitHub Action secrets.
+### CI/CD Pipelines
+
+- GitHub Actions workflows for:
+  - Docker image building and pushing
+  - AWS EC2 deployment
+  - GCP Cloud Run deployment
+  - Infrastructure provisioning via Terraform
+  - Content generation scheduling
 
 ## Tech Stack
 
-- **Frontend**: JavaScript, HTML, Bootstrap
-- **Backend API**: Python, Flask
-- **Scheduler**: Python, OpenAI API
-- **Database**: Firestore
-- **Infrastructure**: Terraform, Google Cloud (Cloud Run, Load Balancer, Cloud DNS, SSL)
-- **Containerization**: Docker, Artifactory
+- **Frontend**: Next.js, React, TailwindCSS, HeroUI
+- **Database**: Firebase/Firestore
+- **Content Generation**: Python, OpenAI API
+- **Infrastructure**:
+  - AWS (EC2, ECR)
+  - GCP (Cloud Run)
+  - Cloudflare (DNS)
+- **IaC**: Terraform
+- **Containerization**: Docker
 - **Automation**: GitHub Actions
+
+## Deployment Architecture
+
+```mermaid
+graph TD
+    A[GitHub Repository] --> B[GitHub Actions]
+    B --> C[Build Docker Image]
+    C --> D[Push to ECR]
+    C --> E[Push to GCR]
+    D --> F[Deploy to EC2]
+    E --> G[Deploy to Cloud Run]
+    H[Cloudflare DNS] --> I[Route Traffic]
+    I --> F
+```
