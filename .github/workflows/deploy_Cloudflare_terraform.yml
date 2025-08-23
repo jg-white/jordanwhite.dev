@@ -29,4 +29,4 @@ jobs:
 
       - name: Terraform Apply
         working-directory: Cloudflare_terraform
-        run: terraform apply -auto-approve
+        run: terraform apply -var=cloudflare_api_token="${{ secrets.CLOUDFLARE_API_TOKEN }}" -auto-approve
