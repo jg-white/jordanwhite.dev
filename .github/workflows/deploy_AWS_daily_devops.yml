@@ -32,11 +32,24 @@ jobs:
 
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v0.1.8
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY
           script: |
+            # Configure AWS credentials
+            export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+            export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+            export AWS_DEFAULT_REGION=eu-west-1
+
+            # Login to ECR
+            aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin 871826697456.dkr.ecr.eu-west-1.amazonaws.com
+
+            # Pull and run container
             docker pull 871826697456.dkr.ecr.eu-west-1.amazonaws.com/daily-devops:latest
             docker stop daily-devops || true
             docker rm daily-devops || true
